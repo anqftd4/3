@@ -13,17 +13,24 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('system');
+  // Default to 'light' for first-time visitors (no stored preference)
+  const [theme, setTheme] = useState<Theme>('light');
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [mounted, setMounted] = useState(false);
 
+  // Check for stored preference on mount
   useEffect(() => {
+    setMounted(true);
     const stored = localStorage.getItem('theme') as Theme | null;
     if (stored) {
       setTheme(stored);
     }
+    // If no stored preference, keep 'light' as default (already set)
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+    
     const root = document.documentElement;
     
     const applyTheme = (isDark: boolean) => {
@@ -46,7 +53,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else {
       applyTheme(theme === 'dark');
     }
-  }, [theme]);
+  }, [theme, mounted]);
 
   const handleSetTheme = (newTheme: Theme) => {
     setTheme(newTheme);
